@@ -378,19 +378,22 @@ func Dial(address, user, domain, password string, config *Config) (c *Conn, err 
 		io.WriteString(log, "Starting TLS handshake\n")
 	}
 
-	tlsConn := tls.Client(conn, nil)
+	tlsCfg := tls.Config{InsecureSkipVerify: config.TrustedAddress}
+	tlsConn := tls.Client(conn, &tlsCfg)
 	if err := tlsConn.Handshake(); err != nil {
 		return nil, err
 	}
 
-	tlsState := tlsConn.ConnectionState()
-	if len(tlsState.VerifiedChains) == 0 {
-		return nil, errors.New("xmpp: failed to verify TLS certificate")
-	}
+	if !config.TrustedAddress {
+		tlsState := tlsConn.ConnectionState()
+		if len(tlsState.VerifiedChains) == 0 {
+			return nil, errors.New("xmpp: failed to verify TLS certificate")
+		}
 
-	if log != nil {
-		for i, cert := range tlsState.VerifiedChains[0] {
-			fmt.Fprintf(log, "  certificate %d: %s\n", i, certName(cert))
+		if log != nil {
+			for i, cert := range tlsState.VerifiedChains[0] {
+				fmt.Fprintf(log, "  certificate %d: %s\n", i, certName(cert))
+			}
 		}
 	}
 
