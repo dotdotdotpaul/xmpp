@@ -616,6 +616,29 @@ type ClientMessage struct {
 	Subject string `xml:"subject"`
 	Body    string `xml:"body"`
 	Thread  string `xml:"thread"`
+
+	// Chat States (XEP-0085) support (kind of a hack)
+	ChatstateActive *string `xml:"active"`
+	ChatstateComposing *string `xml:"composing"`
+	ChatstatePaused *string `xml:"paused"`
+	ChatstateGone *string `xml:"gone"`
+	ChatstateInactive *string `xml:"inactive"`
+}
+
+func (cm *ClientMessage) ChatState() string {
+	switch {
+	case cm.ChatstateActive != nil:
+		return "active"
+	case cm.ChatstateComposing != nil:
+		return "composing"
+	case cm.ChatstatePaused != nil:
+		return "paused"
+	case cm.ChatstateGone != nil:
+		return "gone"
+	case cm.ChatstateInactive != nil:
+		return "inactive"
+	}
+	return ""
 }
 
 type ClientText struct {
